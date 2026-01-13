@@ -4,8 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,26 +12,23 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
-@Table(name = "product_skus")
-@Getter @Setter
+@Table(name = "categories")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProductSku {
+public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String skuCode; // Ví dụ: AO-RONG-L
-    private String size;    // L, M, XL
-    private String color;   // Black, White
-    private Integer quantity; // Tồn kho
-    private BigDecimal price; // Giá bán thực tế của SKU này
+    private String name; // Ví dụ: "Áo Thun", "Quần Short"
 
-    @ManyToOne
-    @JoinColumn(name = "product_id")
-    private Product product;
+    // Một danh mục có nhiều sản phẩm
+    @OneToMany(mappedBy = "category")
+    private List<Product> products;
 }
