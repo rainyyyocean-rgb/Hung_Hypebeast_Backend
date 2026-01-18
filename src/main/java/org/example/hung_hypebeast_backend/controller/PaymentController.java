@@ -1,9 +1,7 @@
 package org.example.hung_hypebeast_backend.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.hung_hypebeast_backend.entity.Order;
-import org.example.hung_hypebeast_backend.enums.OrderStatus;
-import org.example.hung_hypebeast_backend.repository.OrderRepository;
+import org.example.hung_hypebeast_backend.service.PaymentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,26 +15,20 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PaymentController {
 
-    private final OrderRepository orderRepository;
+    private final PaymentService paymentService;
 
-    // API này giả vờ là SePay gọi về Backend của bạn khi khách chuyển khoản xong
     @PostMapping("/sepay-webhook-mock")
     public ResponseEntity<?> mockSePayWebhook(@RequestBody Map<String, String> payload) {
-        // Payload giả lập: { "trackingToken": "aaaa-bbbb-cccc" }
         String token = payload.get("trackingToken");
 
-        Order order = orderRepository.findByTrackingToken(token)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
+        try {
+            // Controller chỉ gọi Service, không biết logic bên trong làm gì
+            paymentService.processSePayWebhook(token);
+            return ResponseEntity.ok("Webhook processed successfully.");
 
-        if (!"PENDING".equals(order.getStatus())) {
-            return ResponseEntity.badRequest().body("Đơn hàng không ở trạng thái chờ thanh toán");
+        } catch (RuntimeException e) {
+            // Nếu Service báo lỗi thì trả về 400
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-
-        // Cập nhật sang ĐÃ THANH TOÁN
-        // Lúc này hàng đã được giữ vĩnh viễn (cho đến khi giao xong)
-        order.setStatus(OrderStatus.valueOf("PAID"));
-        orderRepository.save(order);
-
-        return ResponseEntity.ok("Webhook nhận thành công. Đơn hàng đã chuyển sang PAID.");
     }
 }

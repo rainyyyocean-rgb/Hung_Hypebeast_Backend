@@ -12,6 +12,7 @@ import org.example.hung_hypebeast_backend.enums.PaymentMethod;
 import org.example.hung_hypebeast_backend.repository.OrderItemRepository;
 import org.example.hung_hypebeast_backend.repository.OrderRepository;
 import org.example.hung_hypebeast_backend.repository.ProductSkuRepository;
+import org.example.hung_hypebeast_backend.service.EmailService;
 import org.example.hung_hypebeast_backend.service.OrderService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +31,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductSkuRepository productSkuRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final EmailService emailService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -98,9 +100,15 @@ public class OrderServiceImpl implements OrderService {
 
         orderItemRepository.saveAll(orderItems);
         order.setTotalAmount(totalAmount);
+        order.setItems(orderItems); // Set items để email service có thể truy cập
         orderRepository.save(order);
 
-        // 3. Trả về thông báo tùy theo phương thức
+        // 3. Gửi email cho đơn COD ngay sau khi đặt hàng thành công
+        if ("COD".equalsIgnoreCase(request.getPaymentMethod())) {
+            emailService.sendOrderConfirmationEmail(order);
+        }
+
+        // 4. Trả về thông báo tùy theo phương thức
         String message = "COD".equalsIgnoreCase(request.getPaymentMethod())
                 ? "Đặt hàng thành công! Chúng tôi sẽ sớm liên hệ."
                 : "Vui lòng chuyển khoản trong vòng 15 phút để giữ hàng.";
@@ -160,4 +168,93 @@ public class OrderServiceImpl implements OrderService {
                 .createdAt(order.getCreatedAt())
                 .build());
     }
+
+    @Override
+    @Transactional
+    public OrderResponse updateOrderStatus(Long orderId, OrderStatus newStatus) {
+        // 1. Tìm đơn hàng
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng ID: " + orderId));
+
+        // 2. Validate trạng thái gửi lên (Có đúng chính tả enum không)
+
+        // Kiểm tra trạng thái cũ
+        OrderStatus oldStatus = order.getStatus();
+
+        // 3. XỬ LÝ LOGIC ĐẶC BIỆT
+
+        // CASE A: Nếu Admin muốn HỦY đơn -> Phải hoàn kho (Restock)
+        // Chỉ hoàn kho nếu đơn cũ CHƯA hủy (để tránh cộng dồn nhiều lần)
+        if (newStatus == OrderStatus.CANCELED && oldStatus != OrderStatus.CANCELED) {
+            for (OrderItem item : order.getItems()) {
+                ProductSku sku = productSkuRepository.findById(item.getSkuId()).orElse(null);
+                if (sku != null) {
+                    sku.setQuantity(sku.getQuantity() + item.getQuantity());
+                    productSkuRepository.save(sku);
+                }
+            }
+            System.out.println("Admin đã hủy đơn " + orderId + " -> Đã hoàn kho.");
+        }
+
+        // CASE B: Nếu Admin muốn khôi phục lại đơn đã hủy (CANCELLED -> CONFIRMED/PENDING)
+        // (Đây là ca khó, thường ít làm vì phải check kho lại. Ở đây mình tạm chặn cho đơn giản)
+        if (oldStatus == OrderStatus.CANCELED && newStatus != OrderStatus.CANCELED) {
+            throw new RuntimeException("Không thể khôi phục đơn hàng đã hủy! Hãy bảo khách đặt đơn mới.");
+        }
+
+        // CASE C: Nếu Admin xác nhận thanh toán (PENDING -> CONFIRMED)
+        // Phải set expiredAt = null để Cronjob không tự động hủy đơn này nữa
+        if (newStatus == OrderStatus.CONFIRMED && oldStatus == OrderStatus.PENDING) {
+            order.setExpiredAt(null);
+        }
+
+        // 4. Lưu thay đổi
+        order.setStatus(newStatus);
+        orderRepository.save(order);
+
+        // 5. Trả về kết quả
+        return OrderResponse.builder()
+                .orderId(order.getId())
+                .customerName(order.getCustomerName())
+                .status(order.getStatus().name())
+                .message("Cập nhật trạng thái thành công!")
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrderResponse trackOrderByToken(String trackingToken) {
+        // 1. Tìm đơn hàng theo tracking token
+        Order order = orderRepository.findByTrackingToken(trackingToken)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng với mã tracking: " + trackingToken));
+
+        // 2. Force load items để tránh lazy loading
+        order.getItems().size();
+
+        // 3. Trả về thông tin đơn hàng
+        return OrderResponse.builder()
+                .orderId(order.getId())
+                .customerName(order.getCustomerName())
+                .customerPhone(order.getCustomerPhone())
+                .customerEmail(order.getCustomerEmail())
+                .shippingAddress(order.getShippingAddress())
+                .totalAmount(order.getTotalAmount())
+                .status(order.getStatus().name())
+                .paymentMethod(order.getPaymentMethod().name())
+                .trackingToken(order.getTrackingToken())
+                .createdAt(order.getCreatedAt())
+                .message("Trạng thái đơn hàng: " + getStatusMessage(order.getStatus()))
+                .build();
+    }
+
+    private String getStatusMessage(OrderStatus status) {
+        return switch (status) {
+            case PENDING -> "Chờ thanh toán";
+            case CONFIRMED -> "Đã xác nhận";
+            case SHIPPING -> "Đang giao hàng";
+            case COMPLETED -> "Đã hoàn thành";
+            case CANCELED -> "Đã hủy";
+        };
+    }
 }
+

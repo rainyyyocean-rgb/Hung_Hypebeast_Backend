@@ -10,4 +10,8 @@ public interface OrderService {
     OrderResponse createOrder(OrderRequest request);
     void cancelUnpaidOrders();
     Page<OrderResponse> getOrdersForAdmin(OrderStatus status, String phone, Pageable pageable);
+    // Hàm cho Admin đổi trạng thái thủ công
+    OrderResponse updateOrderStatus(Long orderId, OrderStatus newStatus);
+    // Hàm tracking đơn hàng theo token (cho khách hàng)
+    OrderResponse trackOrderByToken(String trackingToken);
 }
