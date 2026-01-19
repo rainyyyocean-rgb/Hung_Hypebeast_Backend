@@ -3,6 +3,8 @@ package org.example.hung_hypebeast_backend.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.example.hung_hypebeast_backend.dto.request.LoginRequest;
 import org.example.hung_hypebeast_backend.dto.response.AuthResponse;
+import org.example.hung_hypebeast_backend.exception.UserNotFoundException;
+import org.example.hung_hypebeast_backend.mapper.AuthMapper;
 import org.example.hung_hypebeast_backend.repository.UserRepository;
 import org.example.hung_hypebeast_backend.service.AuthService;
 import org.example.hung_hypebeast_backend.util.JwtUtil;
@@ -17,10 +19,12 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final AuthMapper authMapper;
 
 
     @Override
     public AuthResponse login(LoginRequest request) {
+        // 1. Xác thực thông tin đăng nhập
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),
@@ -28,18 +32,15 @@ public class AuthServiceImpl implements AuthService {
                 )
         );
 
+        // 2. Lấy thông tin user từ database
         var user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(request.getUsername(), true));
 
+        // 3. Tạo JWT token
         var jwtToken = jwtUtil.generateToken(user);
 
-        return AuthResponse.builder()
-                .token(jwtToken)
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .role(user.getRole().name())
-                .message("Login successful")
-                .build();
+        // 4. Sử dụng mapper để tạo response
+        return authMapper.toAuthResponse(user, jwtToken);
     }
 }
 

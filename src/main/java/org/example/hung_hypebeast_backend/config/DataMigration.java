@@ -19,23 +19,9 @@ public class DataMigration {
 
     @PostConstruct
     public void runMigrations() {
-        migratePaidToConfirmed();
         createDefaultAdminUser();
     }
 
-    private void migratePaidToConfirmed() {
-        try {
-            int updated = jdbcTemplate.update(
-                "UPDATE orders SET status = 'CONFIRMED' WHERE status = 'PAID'"
-            );
-
-            if (updated > 0) {
-                System.out.println("✅ [Migration] Updated " + updated + " orders from PAID to CONFIRMED");
-            }
-        } catch (Exception e) {
-            System.err.println("❌ [Migration] Failed to migrate PAID orders: " + e.getMessage());
-        }
-    }
 
     private void createDefaultAdminUser() {
         try {

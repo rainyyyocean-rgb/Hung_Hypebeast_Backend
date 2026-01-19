@@ -32,6 +32,14 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
+  web:
+    error:
+      whitelabel:
+        enabled: false
+      include-message: always
+      include-exception: true
+      include-stacktrace: always
+      include-binding-errors: always
 
 # JWT Configuration
 jwt:

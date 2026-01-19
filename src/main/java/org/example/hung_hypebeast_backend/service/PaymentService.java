@@ -1,5 +1,7 @@
 package org.example.hung_hypebeast_backend.service;
 
+import org.example.hung_hypebeast_backend.dto.response.OrderResponse;
+
 public interface PaymentService {
-    void processSePayWebhook(String trackingToken);
+    OrderResponse processSePayWebhook(String trackingToken);
 }
