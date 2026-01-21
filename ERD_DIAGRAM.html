@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERD Diagram - Hung Hypebeast E-commerce</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/panzoom/9.4.3/panzoom.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header h1 {
+            color: #333;
+            text-align: center;
+            margin: 0 0 5px 0;
+            font-size: 2em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin: 0;
+            font-size: 1em;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .main-content {
+            display: flex;
+            height: calc(100vh - 180px);
+            padding: 20px;
+            gap: 20px;
+        }
+        .diagram-panel {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            position: relative;
+        }
+        .diagram-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            cursor: grab;
+            background: 
+                linear-gradient(90deg, #f0f0f0 1px, transparent 1px),
+                linear-gradient(#f0f0f0 1px, transparent 1px);
+            background-size: 20px 20px;
+            position: relative;
+        }
+        .diagram-container:active {
+            cursor: grabbing;
+        }
+        .diagram-wrapper {
+            transform-origin: 0 0;
+            display: inline-block;
+            min-width: 100%;
+            padding: 40px;
+        }
+        .info-panel {
+            width: 350px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 25px;
+            overflow-y: auto;
+            max-height: calc(100vh - 180px);
+        }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #1976D2;
+            font-size: 1.1em;
+        }
+        .info-box p, .info-box ul {
+            margin: 8px 0;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        .info-box ul {
+            padding-left: 20px;
+        }
+        .info-box li {
+            margin: 5px 0;
+        }
+        .legend-item {
+            background: #fff3e0;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #ff9800;
+        }
+        .legend-item strong {
+            color: #e65100;
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        .legend-item small {
+            color: #666;
+            font-size: 0.85em;
+        }
+        .zoom-indicator {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            pointer-events: none;
+        }
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+                height: auto;
+            }
+            .info-panel {
+                width: 100%;
+                max-height: 400px;
+            }
+            .diagram-panel {
+                height: 600px;
+            }
+        }
+        @media print {
+            body {
+                background: white;
+            }
+            .header .controls {
+                display: none;
+            }
+            .info-panel {
+                display: none;
+            }
+            .diagram-panel {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🗄️ SƠ ĐỒ ERD - HUNG HYPEBEAST E-COMMERCE</h1>
+        <div class="subtitle">Java Spring Boot | PostgreSQL | 6 Tables</div>
+        <div class="controls">
+            <button class="btn" onclick="zoomIn()">🔍 Zoom In</button>
+            <button class="btn" onclick="zoomOut()">🔍 Zoom Out</button>
+            <button class="btn" onclick="resetZoom()">↺ Reset</button>
+            <button class="btn" onclick="fitToScreen()">⛶ Fit Screen</button>
+            <button class="btn" onclick="window.print()">🖨️ Print/PDF</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="diagram-panel">
+            <div class="diagram-container" id="diagram-container">
+                <div class="diagram-wrapper" id="diagram-wrapper">
+                    <div class="mermaid">
+erDiagram
+    CATEGORIES ||--o{ PRODUCTS : "contains"
+    PRODUCTS ||--o{ PRODUCT_SKUS : "has variants"
+    ORDERS ||--o{ ORDER_ITEMS : "contains"
+    PRODUCT_SKUS ||--o{ ORDER_ITEMS : "references"
+    USERS ||--o{ ORDERS : "places"
+
+    CATEGORIES {
+        bigint id PK
+        varchar name
+    }
+
+    PRODUCTS {
+        bigint id PK
+        varchar name
+        text description
+        decimal base_price
+        bigint category_id FK
+    }
+
+    PRODUCT_SKUS {
+        bigint id PK
+        varchar sku_code
+        varchar size
+        varchar color
+        integer quantity
+        decimal price
+        bigint product_id FK
+    }
+
+    ORDERS {
+        bigint id PK
+        varchar customer_name
+        varchar customer_phone
+        varchar customer_email
+        text shipping_address
+        decimal total_amount
+        varchar status
+        varchar payment_method
+        varchar tracking_token UK
+        timestamp created_at
+        timestamp expired_at
+    }
+
+    ORDER_ITEMS {
+        bigint id PK
+        bigint order_id FK
+        bigint sku_id
+        varchar product_name
+        varchar size
+        varchar color
+        integer quantity
+        decimal price
+    }
+
+    USERS {
+        bigint id PK
+        varchar username UK
+        varchar password
+        varchar email UK
+        varchar role
+        timestamp created_at
+    }
+                    </div>
+                </div>
+            </div>
+            <div class="zoom-indicator" id="zoom-indicator">100%</div>
+        </div>
+
+        <div class="info-panel">
+            <div class="info-box">
+                <h3>📋 Thông tin</h3>
+                <p><strong>Khách hàng:</strong> Anh Hùng</p>
+                <p><strong>Tech Stack:</strong> Java 17, Spring Boot, PostgreSQL</p>
+                <p><strong>Số bảng:</strong> 6 tables</p>
+            </div>
+
+            <div class="info-box">
+                <h3>🔑 Quan hệ chính</h3>
+                <div class="legend-item">
+                    <strong>CATEGORIES → PRODUCTS</strong>
+                    <small>1 danh mục có nhiều sản phẩm (1:N)</small>
+                </div>
+                <div class="legend-item">
+                    <strong>PRODUCTS → PRODUCT_SKUS</strong>
+                    <small>1 sản phẩm có nhiều biến thể (1:N)</small>
+                </div>
+                <div class="legend-item">
+                    <strong>ORDERS → ORDER_ITEMS</strong>
+                    <small>1 đơn hàng có nhiều items (1:N)</small>
+                </div>
+                <div class="legend-item">
+                    <strong>PRODUCT_SKUS → ORDER_ITEMS</strong>
+                    <small>Soft reference (Snapshot Pattern)</small>
+                </div>
+            </div>
+
+            <div class="info-box" style="background: #fff3cd; border-left-color: #ffc107;">
+                <h3>⚡ Điểm đặc biệt</h3>
+                <ul>
+                    <li><strong>Không có bảng reservation:</strong> Giữ hàng bằng order + auto-cancel</li>
+                    <li><strong>Pessimistic Lock:</strong> Xử lý race condition</li>
+                    <li><strong>Snapshot Pattern:</strong> ORDER_ITEMS lưu thông tin tại thời điểm mua</li>
+                    <li><strong>Guest Checkout:</strong> Tracking bằng UUID token</li>
+                </ul>
+            </div>
+
+            <div class="info-box" style="background: #e8f5e9; border-left-color: #4caf50;">
+                <h3>💡 Hướng dẫn</h3>
+                <ul>
+                    <li><strong>Kéo thả:</strong> Di chuyển sơ đồ</li>
+                    <li><strong>Scroll chuột:</strong> Zoom in/out</li>
+                    <li><strong>Nút Zoom:</strong> Phóng to/thu nhỏ</li>
+                    <li><strong>Fit Screen:</strong> Vừa màn hình</li>
+                    <li><strong>Print:</strong> Lưu PDF</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Mermaid with horizontal layout
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#667eea',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#764ba2',
+                lineColor: '#764ba2',
+                secondaryColor: '#ff9800',
+                tertiaryColor: '#e3f2fd'
+            },
+            er: {
+                layoutDirection: 'LR',  // Left to Right for horizontal layout
+                minEntityWidth: 100,
+                minEntityHeight: 75,
+                entityPadding: 15,
+                stroke: '#764ba2',
+                fill: '#667eea',
+                fontSize: 12
+            }
+        });
+
+        // Pan and Zoom functionality
+        let currentZoom = 1;
+        const container = document.getElementById('diagram-container');
+        const wrapper = document.getElementById('diagram-wrapper');
+        const zoomIndicator = document.getElementById('zoom-indicator');
+
+        let isDragging = false;
+        let startX, startY, scrollLeft, scrollTop;
+
+        // Mouse drag to pan
+        container.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.pageX - container.offsetLeft;
+            startY = e.pageY - container.offsetTop;
+            scrollLeft = container.scrollLeft;
+            scrollTop = container.scrollTop;
+        });
+
+        container.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+
+        container.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        container.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const x = e.pageX - container.offsetLeft;
+            const y = e.pageY - container.offsetTop;
+            const walkX = (x - startX) * 2;
+            const walkY = (y - startY) * 2;
+            container.scrollLeft = scrollLeft - walkX;
+            container.scrollTop = scrollTop - walkY;
+        });
+
+        // Mouse wheel to zoom
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            currentZoom = Math.min(Math.max(0.3, currentZoom + delta), 3);
+            updateZoom();
+        });
+
+        function updateZoom() {
+            wrapper.style.transform = `scale(${currentZoom})`;
+            zoomIndicator.textContent = Math.round(currentZoom * 100) + '%';
+        }
+
+        function zoomIn() {
+            currentZoom = Math.min(currentZoom + 0.2, 3);
+            updateZoom();
+        }
+
+        function zoomOut() {
+            currentZoom = Math.max(currentZoom - 0.2, 0.3);
+            updateZoom();
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            updateZoom();
+            container.scrollLeft = 0;
+            container.scrollTop = 0;
+        }
+
+        function fitToScreen() {
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+            const wrapperWidth = wrapper.scrollWidth;
+            const wrapperHeight = wrapper.scrollHeight;
+            
+            const scaleX = containerWidth / wrapperWidth;
+            const scaleY = containerHeight / wrapperHeight;
+            
+            currentZoom = Math.min(scaleX, scaleY) * 0.9;
+            updateZoom();
+            
+            // Center the diagram
+            setTimeout(() => {
+                container.scrollLeft = (wrapper.scrollWidth * currentZoom - containerWidth) / 2;
+                container.scrollTop = (wrapper.scrollHeight * currentZoom - containerHeight) / 2;
+            }, 100);
+        }
+
+        // Auto fit on load
+        window.addEventListener('load', () => {
+            setTimeout(fitToScreen, 500);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sequence Diagrams - Hung Hypebeast E-commerce</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header h1 {
+            color: #333;
+            text-align: center;
+            margin: 0 0 5px 0;
+            font-size: 2em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin: 0;
+            font-size: 1em;
+        }
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: #f0f0f0;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .tab-btn:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+        .controls {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        .main-content {
+            padding: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        .diagram-section {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .diagram-section.active {
+            display: block;
+        }
+        .diagram-section h2 {
+            color: #667eea;
+            margin-top: 0;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+        .diagram-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 20px 0;
+            overflow-x: auto;
+            min-height: 400px;
+        }
+        .explanation {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .explanation h3 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+        .explanation ol {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        .explanation li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        .highlight {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .highlight strong {
+            color: #e65100;
+        }
+        @media (max-width: 768px) {
+            .nav-tabs {
+                flex-direction: column;
+            }
+            .tab-btn {
+                width: 100%;
+            }
+        }
+        @media print {
+            body {
+                background: white;
+            }
+            .header .nav-tabs,
+            .header .controls {
+                display: none;
+            }
+            .diagram-section {
+                display: block !important;
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 SEQUENCE DIAGRAMS</h1>
+        <div class="subtitle">Hung Hypebeast E-commerce - Các luồng nghiệp vụ quan trọng</div>
+        
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="showTab(1)">1️⃣ Tạo đơn hàng</button>
+            <button class="tab-btn" onclick="showTab(2)">2️⃣ Thanh toán SePay</button>
+            <button class="tab-btn" onclick="showTab(3)">3️⃣ Race Condition</button>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="window.print()">🖨️ Print All</button>
+            <button class="btn" onclick="exportCurrent()">💾 Export Current</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- Diagram 1: Order Creation -->
+        <div class="diagram-section active" id="tab1">
+            <h2>3.2.1 Luồng tạo đơn hàng với xử lý Race Condition (CRITICAL)</h2>
+            
+            <div class="diagram-container">
+                <div class="mermaid">
+sequenceDiagram
+    participant Customer
+    participant Frontend
+    participant CartAPI
+    participant OrderAPI
+    participant ProductSkuRepo
+    participant OrderRepo
+    participant EmailService
+
+    Customer->>Frontend: Thêm sản phẩm vào giỏ
+    Frontend->>CartAPI: POST /api/v1/cart/validate
+    CartAPI->>ProductSkuRepo: Check available quantity
+    CartAPI-->>Frontend: Validation result
+    
+    Customer->>Frontend: Điền thông tin & bấm "Đặt hàng"
+    Frontend->>OrderAPI: POST /api/v1/orders
+    
+    Note over OrderAPI: CRITICAL: Pessimistic Lock
+    OrderAPI->>ProductSkuRepo: SELECT ... FOR UPDATE (Lock)
+    
+    alt Đủ hàng
+        OrderAPI->>ProductSkuRepo: Deduct quantity (trừ stock ngay)
+        OrderAPI->>OrderRepo: Create order (PENDING for SePay, CONFIRMED for COD)
+        Note over OrderAPI: Set expired_at = now + 15min (for SePay)
+        OrderAPI->>EmailService: Send confirmation email (COD only)
+        OrderAPI-->>Frontend: Order created (tracking_token)
+    else Không đủ hàng
+        OrderAPI-->>Frontend: 400 Bad Request (Hết hàng)
+    end
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h3>📝 Giải thích luồng:</h3>
+                <ol>
+                    <li><strong>Validate Cart:</strong> Check tồn kho trước khi checkout</li>
+                    <li><strong>Create Order với Lock:</strong> Pessimistic lock đảm bảo không có race condition</li>
+                    <li><strong>Trừ stock ngay:</strong> Khi tạo đơn hàng, stock bị trừ luôn</li>
+                    <li><strong>COD:</strong> Status = CONFIRMED, gửi email ngay</li>
+                    <li><strong>SePay:</strong> Status = PENDING, set expired_at, chờ thanh toán</li>
+                    <li><strong>Nếu hết thời gian:</strong> Scheduler tự động cancel và hoàn stock</li>
+                </ol>
+            </div>
+
+            <div class="highlight">
+                <strong>🔒 Điểm quan trọng:</strong> Sử dụng Pessimistic Lock (SELECT ... FOR UPDATE) để đảm bảo chỉ 1 transaction xử lý tại 1 thời điểm, tránh overselling khi 2 người mua cùng lúc.
+            </div>
+        </div>
+
+        <!-- Diagram 2: SePay Payment -->
+        <div class="diagram-section" id="tab2">
+            <h2>3.2.2 Luồng thanh toán SePay</h2>
+            
+            <div class="diagram-container">
+                <div class="mermaid">
+sequenceDiagram
+    participant Customer
+    participant Frontend
+    participant OrderAPI
+    participant ProductSkuRepo
+    participant SePay
+    participant WebhookAPI
+    participant OrderRepo
+    participant EmailService
+    participant Scheduler
+
+    Customer->>Frontend: Chọn thanh toán SePay
+    Frontend->>OrderAPI: POST /api/v1/orders (paymentMethod=SEPAY)
+    
+    Note over OrderAPI: Pessimistic Lock
+    OrderAPI->>ProductSkuRepo: SELECT ... FOR UPDATE & Deduct quantity
+    OrderAPI->>OrderRepo: Create order (status=PENDING, expired_at=now+15min)
+    OrderAPI-->>Frontend: Order created (tracking_token)
+    
+    Frontend->>Customer: Hiển thị QR code / Payment link
+    
+    alt Thanh toán thành công trong 15 phút
+        Customer->>SePay: Quét QR / Thanh toán
+        SePay->>WebhookAPI: POST /api/v1/payments/sepay-webhook-mock
+        WebhookAPI->>OrderRepo: Update status: PENDING → CONFIRMED
+        WebhookAPI->>OrderRepo: Clear expired_at
+        WebhookAPI-->>SePay: 200 OK
+        WebhookAPI->>EmailService: Send confirmation email
+    else Không thanh toán trong 15 phút
+        Scheduler->>OrderRepo: Scan expired orders (every 1 minute)
+        Note over Scheduler: Find orders: status=PENDING AND expired_at < now
+        Scheduler->>OrderRepo: Update status: PENDING → CANCELED
+        Scheduler->>ProductSkuRepo: Restore stock quantity
+        Scheduler->>EmailService: Send cancellation email (optional)
+    end
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h3>📝 Giải thích luồng:</h3>
+                <ol>
+                    <li><strong>Tạo đơn PENDING:</strong> Khi chọn SePay, order có status = PENDING, stock đã bị trừ</li>
+                    <li><strong>Webhook xử lý thanh toán:</strong> SePay gọi webhook khi khách thanh toán thành công</li>
+                    <li><strong>Auto-cancel:</strong> Scheduler tự động hủy đơn sau 15 phút nếu không thanh toán và hoàn lại stock</li>
+                </ol>
+            </div>
+
+            <div class="highlight">
+                <strong>⏰ Cơ chế giữ hàng:</strong> Stock bị trừ ngay khi tạo đơn. Nếu không thanh toán trong 15 phút, scheduler tự động cancel đơn và hoàn lại stock. Không cần bảng reservation riêng!
+            </div>
+        </div>
+
+        <!-- Diagram 3: Race Condition -->
+        <div class="diagram-section" id="tab3">
+            <h2>3.2.3 Luồng xử lý Race Condition (2 người mua cùng lúc)</h2>
+            
+            <div class="diagram-container">
+                <div class="mermaid">
+sequenceDiagram
+    participant User1
+    participant User2
+    participant OrderService
+    participant ProductSkuRepo
+    participant OrderRepo
+
+    Note over ProductSkuRepo: SKU có quantity = 1 (last item)
+    
+    par User 1 và User 2 bấm Đặt hàng cùng lúc
+        User1->>OrderService: createOrder(sku_id=1, qty=1)
+        User2->>OrderService: createOrder(sku_id=1, qty=1)
+    end
+    
+    Note over OrderService: Request User 1 được xử lý trước
+    
+    OrderService->>ProductSkuRepo: findByIdWithLock(sku_id=1)
+    Note over ProductSkuRepo: SELECT FOR UPDATE - Lock acquired by User1
+    ProductSkuRepo->>OrderService: ProductSku (quantity=1, LOCKED)
+    
+    Note over OrderService: Validate: 1 >= 1 ✅
+    
+    OrderService->>ProductSkuRepo: Deduct quantity (1 - 1 = 0)
+    OrderService->>OrderRepo: Create order (status=PENDING/CONFIRMED)
+    OrderRepo->>OrderService: Order created
+    OrderService->>User1: ✅ Đặt hàng thành công!
+    
+    Note over ProductSkuRepo: Lock released
+    
+    Note over OrderService: Giờ xử lý request User 2
+    
+    OrderService->>ProductSkuRepo: findByIdWithLock(sku_id=1)
+    Note over ProductSkuRepo: SELECT FOR UPDATE - Lock acquired by User2
+    ProductSkuRepo->>OrderService: ProductSku (quantity=0, LOCKED)
+    
+    Note over OrderService: Validate: 0 >= 1 ❌
+    
+    OrderService->>User2: ❌ Hết hàng (InsufficientStockException)
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h3>📝 Giải thích luồng:</h3>
+                <ol>
+                    <li><strong>Parallel Requests:</strong> 2 user bấm đặt hàng cùng lúc</li>
+                    <li><strong>Pessimistic Lock (User 1):</strong>
+                        <ul>
+                            <li>OrderService gọi findByIdWithLock() → SELECT FOR UPDATE</li>
+                            <li>Database lock row của SKU, User 2 phải chờ</li>
+                            <li>Validate: 1 >= 1 ✅ → Trừ stock → Tạo order thành công</li>
+                            <li>Lock được release</li>
+                        </ul>
+                    </li>
+                    <li><strong>Pessimistic Lock (User 2):</strong>
+                        <ul>
+                            <li>Giờ User 2 mới được xử lý</li>
+                            <li>Lấy được lock (User 1 đã release)</li>
+                            <li>Validate: 0 >= 1 ❌ → Throw InsufficientStockException</li>
+                        </ul>
+                    </li>
+                    <li><strong>Kết quả:</strong> User 1 mua được, User 2 nhận thông báo hết hàng (KHÔNG bị overselling)</li>
+                </ol>
+            </div>
+
+            <div class="highlight">
+                <strong>🎯 Vấn đề được giải quyết:</strong> Đây là vấn đề CRITICAL mà khách hàng nhấn mạnh trong email: "Đợt trước sale, cái áo còn đúng 1 cái size L. Hai ông khách cùng bấm mua một lúc... cuối cùng anh phải gọi điện xin lỗi 1 ông, bị chửi te tua." Giờ với Pessimistic Lock, vấn đề này không còn nữa!
+                <br><br>
+                <strong>🔒 Cơ chế Pessimistic Lock:</strong>
+                <ul>
+                    <li><strong>SELECT FOR UPDATE:</strong> Lock row trong database, transaction khác phải chờ</li>
+                    <li><strong>Atomic Operation:</strong> Check và update quantity trong 1 transaction</li>
+                    <li><strong>No Race Condition:</strong> Không thể có 2 transaction cùng đọc quantity=1</li>
+                    <li><strong>FIFO Processing:</strong> Request đến trước được xử lý trước</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#667eea',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#764ba2',
+                lineColor: '#764ba2',
+                secondaryColor: '#ff9800',
+                tertiaryColor: '#e3f2fd',
+                noteBkgColor: '#fff3cd',
+                noteTextColor: '#333',
+                noteBorderColor: '#ffc107'
+            },
+            sequence: {
+                diagramMarginX: 50,
+                diagramMarginY: 10,
+                actorMargin: 50,
+                width: 150,
+                height: 65,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 35,
+                mirrorActors: true,
+                useMaxWidth: true
+            }
+        });
+
+        // Tab switching
+        function showTab(tabNumber) {
+            // Hide all tabs
+            document.querySelectorAll('.diagram-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById('tab' + tabNumber).classList.add('active');
+            event.target.classList.add('active');
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Export current diagram
+        function exportCurrent() {
+            const activeTab = document.querySelector('.diagram-section.active');
+            const title = activeTab.querySelector('h2').textContent;
+            alert('💡 Để export diagram:\n\n1. Nhấn Ctrl+P (hoặc Cmd+P)\n2. Chọn "Save as PDF"\n3. Hoặc click chuột phải vào diagram → "Save image as..."\n\nĐang xem: ' + title);
+        }
+    </script>
+</body>
+</html>
