@@ -326,43 +326,6 @@ Sau khi khởi động ứng dụng, truy cập Swagger UI để xem và test AP
 
 **URL:** http://localhost:8080/swagger-ui/index.html
 
-### OpenAPI JSON
-
-**URL:** http://localhost:8080/v3/api-docs
-
-### Các Endpoint Chính
-
-#### Authentication
-- `POST /api/auth/login` - Đăng nhập
-- `POST /api/auth/register` - Đăng ký
-
-#### Products
-- `GET /api/products` - Lấy danh sách sản phẩm
-- `GET /api/products/{id}` - Lấy chi tiết sản phẩm
-- `POST /api/products` - Tạo sản phẩm mới (Admin)
-- `PUT /api/products/{id}` - Cập nhật sản phẩm (Admin)
-- `DELETE /api/products/{id}` - Xóa sản phẩm (Admin)
-
-#### Categories
-- `GET /api/categories` - Lấy danh sách danh mục
-- `POST /api/categories` - Tạo danh mục mới (Admin)
-
-#### Cart
-- `GET /api/cart` - Xem giỏ hàng
-- `POST /api/cart/items` - Thêm sản phẩm vào giỏ
-- `PUT /api/cart/items/{id}` - Cập nhật số lượng
-- `DELETE /api/cart/items/{id}` - Xóa sản phẩm khỏi giỏ
-
-#### Orders
-- `GET /api/orders` - Lấy danh sách đơn hàng
-- `POST /api/orders` - Tạo đơn hàng mới
-- `GET /api/orders/{id}` - Xem chi tiết đơn hàng
-
-#### Payment
-- `POST /api/payment/create` - Tạo payment link
-- `POST /api/payment/webhook` - Webhook xử lý thanh toán
-
----
 
 ## 🔐 Tài Khoản Mặc Định
 
@@ -375,20 +338,6 @@ Email: admin@hypebeast.com
 Role: ADMIN
 ```
 
-### Test Login Request
-
-```bash
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "admin",
-    "password": "admin123"
-  }'
-```
-
-Response sẽ trả về JWT token để sử dụng cho các request khác.
-
----
 
 ## 🛠️ Troubleshooting
 
