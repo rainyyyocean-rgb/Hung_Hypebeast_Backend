@@ -52,4 +52,22 @@ public class ProductController {
     public ResponseEntity<ProductResponse> getProductDetail(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
+
+    @GetMapping("/filter")
+    @Operation(
+            summary = "Lấy danh sách sản phẩm với Specification Filter",
+            description = "Trả về danh sách sản phẩm sử dụng JPA Specification để filter động theo category, khoảng giá, từ khóa, phân trang và sắp xếp"
+    )
+    public ResponseEntity<Page<ProductResponse>> getProductsWithFilter(
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sort
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
+        return ResponseEntity.ok(productService.getProductsWithSpecification(categoryId, minPrice, maxPrice, keyword, pageable));
+    }
 }
